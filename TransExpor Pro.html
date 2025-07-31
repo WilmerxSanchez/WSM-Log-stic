@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRANSEXPORT PRO - Administración</title>
+    <!-- Incluye Tailwind CSS para un estilo rápido y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter para una mejor legibilidad -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Un gris claro de fondo */
+        }
+        .section-content {
+            display: none; /* Oculta todas las secciones por defecto */
+        }
+        .section-content.active {
+            display: block; /* Muestra la sección activa */
+        }
+        /* Estilo para los botones de navegación */
+        .nav-button {
+            @apply px-4 py-2 rounded-lg transition-colors duration-200;
+        }
+        .nav-button.active {
+            @apply bg-blue-600 text-white shadow-md;
+        }
+        .nav-button:not(.active) {
+            @apply text-gray-700 hover:bg-gray-200;
+        }
+        /* Estilo para los inputs y selects */
+        .form-input {
+            @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+        .form-button {
+            @apply bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md;
+        }
+        .delete-button {
+            @apply bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 text-sm;
+        }
+        .edit-button {
+            @apply bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600 transition-colors duration-200 text-sm mr-2;
+        }
+        /* Estilo para los modales */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            text-align: left;
+        }
+        @media (min-width: 640px) {
+            .modal-form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Encabezado de la aplicación -->
+    <header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-6 shadow-lg">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-4xl font-extrabold mb-4 sm:mb-0">TRANSEXPORT PRO</h1>
+            <nav>
+                <ul class="flex flex-wrap justify-center gap-4">
+                    <li><button class="nav-button active" data-section="dashboard">Dashboard</button></li>
+                    <li><button class="nav-button" data-section="viajes">Viajes</button></li>
+                    <li><button class="nav-button" data-section="facturas">Facturas</button></li>
+                    <li><button class="nav-button" data-section="empleados">Empleados</button></li>
+                    <li><button class="nav-button" data-section="camiones">Camiones</button></li>
+                    <li><button class="nav-button" data-section="mantenimiento">Mantenimiento</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido principal de la aplicación -->
+    <main class="container mx-auto p-6 flex-grow">
+        <!-- Sección del Dashboard (activa por defecto) -->
+        <section id="dashboard" class="section-content active bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de la Empresa</h2>
+            <p class="text-gray-600 mb-6">Un resumen completo del estado actual de TRANSEXPORT PRO.</p>
+
+            <div class="mb-8 p-4 bg-gray-50 rounded-lg shadow-inner flex items-center justify-center gap-4">
+                <label for="dashboard-month-selector" class="block text-gray-700 text-lg font-bold">Ver por mes:</label>
+                <input type="month" id="dashboard-month-selector" class="form-input w-auto">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Tarjeta de Ingresos Totales (Acumulado) -->
+                <div class="bg-green-100 p-6 rounded-lg shadow-md border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">Ingresos Totales (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-green-700">$<span id="dashboard-total-revenue-accumulated">0.00</span></p>
+                    <p class="text-sm text-green-600 mt-2">Desde el inicio</p>
+                </div>
+
+                <!-- Tarjeta de Viajes Completados (Acumulado) -->
+                <div class="bg-blue-100 p-6 rounded-lg shadow-md border border-blue-200">
+                    <h3 class="text-xl font-semibold text-blue-800 mb-2">Viajes Completados (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-blue-700"><span id="dashboard-completed-trips-accumulated">0</span></p>
+                    <p class="text-sm text-blue-600 mt-2">Desde el inicio</p>
+                </div>
+
+                <!-- Tarjeta de Facturas Pendientes (Acumulado) -->
+                <div class="bg-yellow-100 p-6 rounded-lg shadow-md border border-yellow-200">
+                    <h3 class="text-xl font-semibold text-yellow-800 mb-2">Facturas Pendientes (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-yellow-700">$<span id="dashboard-pending-invoices-accumulated">0.00</span></p>
+                    <p class="text-sm text-yellow-600 mt-2">Por cobrar</p>
+                </div>
+
+                <!-- Tarjeta de Empleados Activos (Acumulado) -->
+                <div class="bg-purple-100 p-6 rounded-lg shadow-md border border-purple-200">
+                    <h3 class="text-xl font-semibold text-purple-800 mb-2">Empleados Activos (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-purple-700"><span id="dashboard-active-employees-accumulated">0</span></p>
+                    <p class="text-sm text-purple-600 mt-2">En plantilla</p>
+                </div>
+
+                <!-- Tarjeta de Camiones Registrados (Acumulado) -->
+                <div class="bg-indigo-100 p-6 rounded-lg shadow-md border border-indigo-200">
+                    <h3 class="text-xl font-semibold text-indigo-800 mb-2">Camiones Registrados (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-indigo-700"><span id="dashboard-registered-trucks-accumulated">0</span></p>
+                    <p class="text-sm text-indigo-600 mt-2">En flota</p>
+                </div>
+
+                <!-- Tarjeta de Vehículos en Mantenimiento (Acumulado) -->
+                <div class="bg-red-100 p-6 rounded-lg shadow-md border border-red-200">
+                    <h3 class="text-xl font-semibold text-red-800 mb-2">Vehículos en Mantenimiento (Acumulado)</h3>
+                    <p class="text-4xl font-bold text-red-700"><span id="dashboard-maintenance-vehicles-accumulated">0</span></p>
+                    <p class="text-sm text-red-600 mt-2">Requieren atención</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Métricas del Mes Seleccionado</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Tarjeta de Ingresos del Mes -->
+                <div class="bg-green-50 p-6 rounded-lg shadow-md border border-green-100">
+                    <h3 class="text-xl font-semibold text-green-700 mb-2">Ingresos del Mes</h3>
+                    <p class="text-4xl font-bold text-green-600">$<span id="dashboard-monthly-revenue">0.00</span></p>
+                    <p class="text-sm text-green-500 mt-2">Viajes completados en el mes</p>
+                </div>
+
+                <!-- Tarjeta de Viajes Completados del Mes -->
+                <div class="bg-blue-50 p-6 rounded-lg shadow-md border border-blue-100">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Viajes Completados del Mes</h3>
+                    <p class="text-4xl font-bold text-blue-600"><span id="dashboard-monthly-completed-trips">0</span></p>
+                    <p class="text-sm text-blue-500 mt-2">En el mes seleccionado</p>
+                </div>
+
+                <!-- Tarjeta de Facturas Pagadas del Mes -->
+                <div class="bg-purple-50 p-6 rounded-lg shadow-md border border-purple-100">
+                    <h3 class="text-xl font-semibold text-purple-700 mb-2">Facturas Pagadas del Mes</h3>
+                    <p class="text-4xl font-bold text-purple-600">$<span id="dashboard-monthly-paid-invoices">0.00</span></p>
+                    <p class="text-sm text-purple-500 mt-2">Facturas pagadas en el mes</p>
+                </div>
+
+                <!-- Tarjeta de Facturas Pendientes del Mes -->
+                <div class="bg-orange-50 p-6 rounded-lg shadow-md border border-orange-100">
+                    <h3 class="text-xl font-semibold text-orange-700 mb-2">Facturas Pendientes del Mes</h3>
+                    <p class="text-4xl font-bold text-orange-600">$<span id="dashboard-monthly-pending-invoices">0.00</span></p>
+                    <p class="text-sm text-orange-500 mt-2">Facturas pendientes/vencidas en el mes</p>
+                </div>
+
+                <!-- Tarjeta de Nuevos Empleados del Mes -->
+                <div class="bg-teal-50 p-6 rounded-lg shadow-md border border-teal-100">
+                    <h3 class="text-xl font-semibold text-teal-700 mb-2">Nuevos Empleados del Mes</h3>
+                    <p class="text-4xl font-bold text-teal-600"><span id="dashboard-monthly-new-employees">0</span></p>
+                    <p class="text-sm text-teal-500 mt-2">Contratados en el mes</p>
+                </div>
+
+                <!-- Tarjeta de Nuevos Camiones del Mes -->
+                <div class="bg-cyan-50 p-6 rounded-lg shadow-md border border-cyan-100">
+                    <h3 class="text-xl font-semibold text-cyan-700 mb-2">Nuevos Camiones del Mes</h3>
+                    <p class="text-4xl font-bold text-cyan-600"><span id="dashboard-monthly-new-trucks">0</span></p>
+                    <p class="text-sm text-cyan-500 mt-2">Registrados en el mes</p>
+                </div>
+
+                <!-- Tarjeta de Mantenimientos del Mes -->
+                <div class="bg-pink-50 p-6 rounded-lg shadow-md border border-pink-100">
+                    <h3 class="text-xl font-semibold text-pink-700 mb-2">Mantenimientos del Mes</h3>
+                    <p class="text-4xl font-bold text-pink-600"><span id="dashboard-monthly-maintenance">0</span></p>
+                    <p class="text-sm text-pink-500 mt-2">Realizados en el mes</p>
+                </div>
+            </div>
+
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Ingresos Históricos por Mes</h3>
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <ul id="monthly-revenue-list" class="list-disc list-inside text-gray-700">
+                    <!-- Los ingresos mensuales se cargarán aquí -->
+                </ul>
+            </div>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Últimas Actividades</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Tipo</th>
+                            <th class="py-3 px-6 text-left">Descripción</th>
+                            <th class="py-3 px-6 text-left rounded-tr-lg">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="latest-activities-table-body">
+                        <!-- Actividades recientes se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Viajes -->
+        <section id="viajes" class="section-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Registro de Viajes</h2>
+            <p class="text-gray-600 mb-6">Aquí podrás registrar y consultar todos los viajes, sus rutas, fechas, estado, y asignar empleados y camiones.</p>
+
+            <form id="travel-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="col-span-1">
+                    <label for="travel-date" class="block text-gray-700 text-sm font-bold mb-2">Fecha:</label>
+                    <input type="date" id="travel-date" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-client" class="block text-gray-700 text-sm font-bold mb-2">Cliente:</label>
+                    <input type="text" id="travel-client" placeholder="Nombre del cliente" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-route" class="block text-gray-700 text-sm font-bold mb-2">Ruta:</label>
+                    <input type="text" id="travel-route" placeholder="Origen - Destino" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-amount" class="block text-gray-700 text-sm font-bold mb-2">Monto ($):</label>
+                    <input type="number" id="travel-amount" placeholder="Monto del viaje" step="0.01" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-employee" class="block text-gray-700 text-sm font-bold mb-2">Empleado (Conductor):</label>
+                    <select id="travel-employee" class="form-input" required>
+                        <option value="">Selecciona un empleado</option>
+                        <!-- Opciones de empleados se cargarán aquí -->
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-truck" class="block text-gray-700 text-sm font-bold mb-2">Camión:</label>
+                    <select id="travel-truck" class="form-input" required>
+                        <option value="">Selecciona un camión</option>
+                        <!-- Opciones de camiones se cargarán aquí -->
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label for="travel-status" class="block text-gray-700 text-sm font-bold mb-2">Estado:</label>
+                    <select id="travel-status" class="form-input" required>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Completado">Completado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button type="submit" class="form-button">Registrar Viaje</button>
+                </div>
+            </form>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Listado de Viajes</h3>
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="form-button bg-gray-600 hover:bg-gray-700" data-export-collection="viajes" data-export-format="csv">Descargar CSV</button>
+                <button class="form-button bg-red-600 hover:bg-red-700" data-export-collection="viajes" data-export-format="pdf">Descargar PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Fecha</th>
+                            <th class="py-3 px-6 text-left">Cliente</th>
+                            <th class="py-3 px-6 text-left">Ruta</th>
+                            <th class="py-3 px-6 text-left">Monto</th>
+                            <th class="py-3 px-6 text-left">Empleado</th>
+                            <th class="py-3 px-6 text-left">Camión</th>
+                            <th class="py-3 px-6 text-left">Estado</th>
+                            <th class="py-3 px-6 text-center rounded-tr-lg">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="travels-table-body">
+                        <!-- Datos de viajes se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Facturas -->
+        <section id="facturas" class="section-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Facturas</h2>
+            <p class="text-gray-600 mb-6">Administra tus facturas emitidas y recibidas, controlando pagos y vencimientos.</p>
+
+            <form id="invoice-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="col-span-1">
+                    <label for="invoice-number" class="block text-gray-700 text-sm font-bold mb-2">Número de Factura:</label>
+                    <input type="text" id="invoice-number" placeholder="Ej: F-001" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="invoice-date" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Emisión:</label>
+                    <input type="date" id="invoice-date" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="invoice-client" class="block text-gray-700 text-sm font-bold mb-2">Cliente:</label>
+                    <input type="text" id="invoice-client" placeholder="Nombre del cliente" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="invoice-amount" class="block text-gray-700 text-sm font-bold mb-2">Monto ($):</label>
+                    <input type="number" id="invoice-amount" placeholder="Monto total" step="0.01" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="invoice-due-date" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Vencimiento:</label>
+                    <input type="date" id="invoice-due-date" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="invoice-status" class="block text-gray-700 text-sm font-bold mb-2">Estado:</label>
+                    <select id="invoice-status" class="form-input" required>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Vencida">Vencida</option>
+                    </select>
+                </div>
+                <div class="col-span-full">
+                    <label for="invoice-trip-id" class="block text-gray-700 text-sm font-bold mb-2">Relacionar con Viaje (Opcional):</label>
+                    <select id="invoice-trip-id" class="form-input">
+                        <option value="">Ningún viaje</option>
+                        <!-- Opciones de viajes completados se cargarán aquí -->
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Solo viajes con estado 'Completado' son mostrados aquí.</p>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button type="submit" class="form-button">Registrar Factura</button>
+                </div>
+            </form>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Listado de Facturas</h3>
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="form-button bg-gray-600 hover:bg-gray-700" data-export-collection="facturas" data-export-format="csv">Descargar CSV</button>
+                <button class="form-button bg-red-600 hover:bg-red-700" data-export-collection="facturas" data-export-format="pdf">Descargar PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Número</th>
+                            <th class="py-3 px-6 text-left">Fecha</th>
+                            <th class="py-3 px-6 text-left">Cliente</th>
+                            <th class="py-3 px-6 text-left">Monto</th>
+                            <th class="py-3 px-6 text-left">Vencimiento</th>
+                            <th class="py-3 px-6 text-left">Estado</th>
+                            <th class="py-3 px-6 text-left">Viaje Relacionado</th>
+                            <th class="py-3 px-6 text-center rounded-tr-lg">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="invoices-table-body">
+                        <!-- Datos de facturas se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Empleados -->
+        <section id="empleados" class="section-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Administración de Empleados</h2>
+            <p class="text-gray-600 mb-6">Mantén un registro de tus empleados, sus datos, roles y salarios.</p>
+
+            <form id="employee-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="col-span-1">
+                    <label for="employee-name" class="block text-gray-700 text-sm font-bold mb-2">Nombre Completo:</label>
+                    <input type="text" id="employee-name" placeholder="Nombre del empleado" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="employee-role" class="block text-gray-700 text-sm font-bold mb-2">Rol:</label>
+                    <input type="text" id="employee-role" placeholder="Ej: Conductor, Administrador" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="employee-phone" class="block text-gray-700 text-sm font-bold mb-2">Teléfono:</label>
+                    <input type="tel" id="employee-phone" placeholder="Ej: +591 7XXXXXXXX" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="employee-salary" class="block text-gray-700 text-sm font-bold mb-2">Salario ($):</label>
+                    <input type="number" id="employee-salary" placeholder="Salario mensual" step="0.01" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="employee-hire-date" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Contratación:</label>
+                    <input type="date" id="employee-hire-date" class="form-input" required>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button type="submit" class="form-button">Registrar Empleado</button>
+                </div>
+            </form>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Listado de Empleados</h3>
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="form-button bg-gray-600 hover:bg-gray-700" data-export-collection="empleados" data-export-format="csv">Descargar CSV</button>
+                <button class="form-button bg-red-600 hover:bg-red-700" data-export-collection="empleados" data-export-format="pdf">Descargar PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Nombre</th>
+                            <th class="py-3 px-6 text-left">Rol</th>
+                            <th class="py-3 px-6 text-left">Teléfono</th>
+                            <th class="py-3 px-6 text-left">Salario</th>
+                            <th class="py-3 px-6 text-left">Contratación</th>
+                            <th class="py-3 px-6 text-center rounded-tr-lg">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="employees-table-body">
+                        <!-- Datos de empleados se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Camiones -->
+        <section id="camiones" class="section-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Registro de Camiones</h2>
+            <p class="text-gray-600 mb-6">Administra tu flota de camiones, incluyendo detalles y estado.</p>
+
+            <form id="truck-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="col-span-1">
+                    <label for="truck-plate" class="block text-gray-700 text-sm font-bold mb-2">Placa:</label>
+                    <input type="text" id="truck-plate" placeholder="Ej: ABC-123" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="truck-brand" class="block text-gray-700 text-sm font-bold mb-2">Marca:</label>
+                    <input type="text" id="truck-brand" placeholder="Ej: Volvo" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="truck-model" class="block text-gray-700 text-sm font-bold mb-2">Modelo:</label>
+                    <input type="text" id="truck-model" placeholder="Ej: FH16" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="truck-year" class="block text-gray-700 text-sm font-bold mb-2">Año:</label>
+                    <input type="number" id="truck-year" placeholder="Ej: 2020" class="form-input" min="1900" max="2099">
+                </div>
+                <div class="col-span-1">
+                    <label for="truck-capacity" class="block text-gray-700 text-sm font-bold mb-2">Capacidad (toneladas):</label>
+                    <input type="number" id="truck-capacity" placeholder="Ej: 40" step="0.1" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="truck-status" class="block text-gray-700 text-sm font-bold mb-2">Estado:</label>
+                    <select id="truck-status" class="form-input" required>
+                        <option value="Activo">Activo</option>
+                        <option value="En Mantenimiento">En Mantenimiento</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button type="submit" class="form-button">Registrar Camión</button>
+                </div>
+            </form>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Listado de Camiones</h3>
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="form-button bg-gray-600 hover:bg-gray-700" data-export-collection="camiones" data-export-format="csv">Descargar CSV</button>
+                <button class="form-button bg-red-600 hover:bg-red-700" data-export-collection="camiones" data-export-format="pdf">Descargar PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Placa</th>
+                            <th class="py-3 px-6 text-left">Marca</th>
+                            <th class="py-3 px-6 text-left">Modelo</th>
+                            <th class="py-3 px-6 text-left">Año</th>
+                            <th class="py-3 px-6 text-left">Capacidad</th>
+                            <th class="py-3 px-6 text-left">Estado</th>
+                            <th class="py-3 px-6 text-center rounded-tr-lg">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="trucks-table-body">
+                        <!-- Datos de camiones se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Mantenimiento -->
+        <section id="mantenimiento" class="section-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Control de Mantenimiento</h2>
+            <p class="text-gray-600 mb-6">Registra y programa el mantenimiento de tu flota de vehículos.</p>
+
+            <form id="maintenance-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="col-span-1">
+                    <label for="maintenance-vehicle" class="block text-gray-700 text-sm font-bold mb-2">Vehículo (Placa):</label>
+                    <input type="text" id="maintenance-vehicle" placeholder="Ej: ABC-123" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="maintenance-type" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Mantenimiento:</label>
+                    <input type="text" id="maintenance-type" placeholder="Ej: Cambio de aceite, Revisión general" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="maintenance-date" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Mantenimiento:</label>
+                    <input type="date" id="maintenance-date" class="form-input" required>
+                </div>
+                <div class="col-span-1">
+                    <label for="maintenance-cost" class="block text-gray-700 text-sm font-bold mb-2">Costo ($):</label>
+                    <input type="number" id="maintenance-cost" placeholder="Costo del mantenimiento" step="0.01" class="form-input">
+                </div>
+                <div class="col-span-1">
+                    <label for="maintenance-notes" class="block text-gray-700 text-sm font-bold mb-2">Notas:</label>
+                    <textarea id="maintenance-notes" rows="2" placeholder="Observaciones adicionales" class="form-input"></textarea>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button type="submit" class="form-button">Registrar Mantenimiento</button>
+                </div>
+            </form>
+
+            <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-4">Historial de Mantenimientos</h3>
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="form-button bg-gray-600 hover:bg-gray-700" data-export-collection="mantenimiento" data-export-format="csv">Descargar CSV</button>
+                <button class="form-button bg-red-600 hover:bg-red-700" data-export-collection="mantenimiento" data-export-format="pdf">Descargar PDF</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left rounded-tl-lg">Vehículo</th>
+                            <th class="py-3 px-6 text-left">Tipo</th>
+                            <th class="py-3 px-6 text-left">Fecha</th>
+                            <th class="py-3 px-6 text-left">Costo</th>
+                            <th class="py-3 px-6 text-left">Notas</th>
+                            <th class="py-3 px-6 text-center rounded-tr-lg">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light" id="maintenance-table-body">
+                        <!-- Datos de mantenimiento se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="bg-gray-800 text-white p-4 text-center mt-auto">
+        <p>&copy; 2024 TRANSEXPORT PRO. Todos los derechos reservados. ID de Usuario: <span id="user-id-display">Cargando...</span></p>
+    </footer>
+
+    <!-- Modal para mensajes de usuario -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('message-modal').style.display='none';">&times;</span>
+            <p id="modal-message" class="text-lg text-gray-800"></p>
+            <button class="form-button mt-4" onclick="document.getElementById('message-modal').style.display='none';">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal para confirmación de eliminación -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('confirm-modal').style.display='none';">&times;</span>
+            <p id="confirm-message" class="text-lg text-gray-800 mb-4">¿Estás seguro de que quieres eliminar este registro?</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-delete-button" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-md">Sí, Eliminar</button>
+                <button class="bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors duration-200 shadow-md" onclick="document.getElementById('confirm-modal').style.display='none';">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para edición de registros -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('edit-modal').style.display='none';">&times;</span>
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">Editar Registro de <span id="edit-modal-title"></span></h3>
+            <form id="edit-form" class="modal-form-grid">
+                <!-- Los campos del formulario se generarán dinámicamente aquí -->
+                <div class="col-span-full flex justify-end mt-4">
+                    <button type="submit" class="form-button">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script para Firebase y la lógica de la aplicación -->
+    <script type="module">
+        // Importa las funciones necesarias de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Importa jspdf-autotable (jsPDF se cargará globalmente)
+        import "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js";
+
+        // Variables globales para Firebase
+        let app;
+        let db;
+        let auth;
+        let userId;
+        let isAuthReady = false; // Flag para asegurar que Firebase está listo
+
+        // Arrays para almacenar datos de referencia (empleados, camiones, viajes)
+        let allEmployees = [];
+        let allTrucks = [];
+        let allTrips = []; // Para relacionar facturas con viajes
+        let allInvoices = []; // Array para almacenar todas las facturas
+        let allMaintenance = []; // Array para almacenar todos los mantenimientos
+
+        // Variables para la edición
+        let currentEditingDocId = null;
+        let currentEditingCollection = null;
+
+        // Referencias a elementos del DOM de los modales
+        const messageModal = document.getElementById('message-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmDeleteButton = document.getElementById('confirm-delete-button');
+        const editModal = document.getElementById('edit-modal');
+        const editModalTitle = document.getElementById('edit-modal-title');
+        const editForm = document.getElementById('edit-form');
+        const monthlyRevenueList = document.getElementById('monthly-revenue-list'); // Elemento para ingresos históricos mensuales
+
+        // Nuevos elementos para el Dashboard mensual
+        const dashboardMonthSelector = document.getElementById('dashboard-month-selector');
+        const dashboardMonthlyRevenue = document.getElementById('dashboard-monthly-revenue');
+        const dashboardMonthlyCompletedTrips = document.getElementById('dashboard-monthly-completed-trips');
+        const dashboardMonthlyPaidInvoices = document.getElementById('dashboard-monthly-paid-invoices');
+        const dashboardMonthlyPendingInvoices = document.getElementById('dashboard-monthly-pending-invoices');
+        const dashboardMonthlyNewEmployees = document.getElementById('dashboard-monthly-new-employees');
+        const dashboardMonthlyNewTrucks = document.getElementById('dashboard-monthly-new-trucks');
+        const dashboardMonthlyMaintenance = document.getElementById('dashboard-monthly-maintenance');
+
+        // Configuración de Firebase (se obtiene del entorno de Canvas)
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Función para mostrar mensajes al usuario
+        function showMessage(message) {
+            modalMessage.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        // Función para inicializar Firebase y autenticar al usuario
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Autenticación: usa el token personalizado si está disponible, si no, inicia sesión anónimamente
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Escucha los cambios en el estado de autenticación
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = userId;
+                        console.log("Usuario autenticado:", userId);
+                        isAuthReady = true;
+                        // Establece el selector de mes al mes actual por defecto
+                        const today = new Date();
+                        const currentMonth = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+                        dashboardMonthSelector.value = currentMonth;
+                        // Una vez autenticado, carga todos los datos
+                        loadAllData();
+                    } else {
+                        console.log("No hay usuario autenticado.");
+                        userId = crypto.randomUUID(); // Genera un ID aleatorio si no hay autenticación
+                        document.getElementById('user-id-display').textContent = `Anónimo (${userId.substring(0, 8)}...)`;
+                        isAuthReady = true; // Permite cargar datos aunque sea anónimo
+                        // Establece el selector de mes al mes actual por defecto incluso para anónimos
+                        const today = new Date();
+                        const currentMonth = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+                        dashboardMonthSelector.value = currentMonth;
+                        loadAllData();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase o autenticar:", error);
+                showMessage("Error al conectar con la base de datos. Por favor, inténtalo de nuevo.");
+            }
+        }
+
+        // Lógica para cambiar de sección
+        document.addEventListener('DOMContentLoaded', () => {
+            const navButtons = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('.section-content');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remueve la clase 'active' de todos los botones y secciones
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    sections.forEach(sec => sec.classList.remove('active'));
+
+                    // Agrega la clase 'active' al botón clickeado
+                    button.classList.add('active');
+
+                    // Obtiene el ID de la sección a mostrar
+                    const targetSectionId = button.dataset.section;
+                    const targetSection = document.getElementById(targetSectionId);
+
+                    // Muestra la sección correspondiente
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                    }
+                });
+            });
+
+            // Event listener para el selector de mes del Dashboard
+            dashboardMonthSelector.addEventListener('change', loadDashboardData);
+
+            // Event listener para los botones de exportación
+            document.addEventListener('click', async (e) => {
+                if (e.target.dataset.exportCollection && e.target.dataset.exportFormat) {
+                    const collectionName = e.target.dataset.exportCollection;
+                    const format = e.target.dataset.exportFormat;
+                    let dataToExport = [];
+                    let filename = `${collectionName}-registros`;
+                    let columns = [];
+
+                    // Prepara los datos y columnas según la colección
+                    switch (collectionName) {
+                        case 'viajes':
+                            dataToExport = allTrips.map(travel => {
+                                const employee = allEmployees.find(emp => emp.id === travel.employeeId);
+                                const truck = allTrucks.find(trk => trk.id === travel.truckId);
+                                return {
+                                    Fecha: travel.date,
+                                    Cliente: travel.client,
+                                    Ruta: travel.route,
+                                    Monto: travel.amount.toFixed(2),
+                                    Empleado: employee ? employee.name : 'Desconocido',
+                                    Camion: truck ? truck.plate : 'Desconocido',
+                                    Estado: travel.status
+                                };
+                            });
+                            columns = ['Fecha', 'Cliente', 'Ruta', 'Monto', 'Empleado', 'Camion', 'Estado'];
+                            filename = 'viajes-registros';
+                            break;
+                        case 'facturas':
+                            dataToExport = allInvoices.map(invoice => { // allInvoices se llenará en loadInvoicesData
+                                const relatedTrip = allTrips.find(trip => trip.id === invoice.tripId);
+                                return {
+                                    Numero: invoice.invoiceNumber,
+                                    Fecha: invoice.date,
+                                    Cliente: invoice.client,
+                                    Monto: invoice.amount.toFixed(2),
+                                    Vencimiento: invoice.dueDate,
+                                    Estado: invoice.status,
+                                    Viaje_Relacionado: relatedTrip ? relatedTrip.route : 'N/A'
+                                };
+                            });
+                            columns = ['Numero', 'Fecha', 'Cliente', 'Monto', 'Vencimiento', 'Estado', 'Viaje_Relacionado'];
+                            filename = 'facturas-registros';
+                            break;
+                        case 'empleados':
+                            dataToExport = allEmployees.map(emp => ({
+                                Nombre: emp.name,
+                                Rol: emp.role,
+                                Telefono: emp.phone,
+                                Salario: emp.salary.toFixed(2),
+                                Contratacion: emp.hireDate
+                            }));
+                            columns = ['Nombre', 'Rol', 'Telefono', 'Salario', 'Contratacion'];
+                            filename = 'empleados-registros';
+                            break;
+                        case 'camiones':
+                            dataToExport = allTrucks.map(truck => ({
+                                Placa: truck.plate,
+                                Marca: truck.brand,
+                                Modelo: truck.model,
+                                Anio: truck.year,
+                                Capacidad: truck.capacity.toFixed(1),
+                                Estado: truck.status
+                            }));
+                            columns = ['Placa', 'Marca', 'Modelo', 'Anio', 'Capacidad', 'Estado'];
+                            filename = 'camiones-registros';
+                            break;
+                        case 'mantenimiento':
+                            dataToExport = allMaintenance.map(maint => ({ // allMaintenance se llenará en loadMaintenanceData
+                                Vehiculo: maint.vehicle,
+                                Tipo: maint.type,
+                                Fecha: maint.date,
+                                Costo: maint.cost.toFixed(2),
+                                Notas: maint.notes
+                            }));
+                            columns = ['Vehiculo', 'Tipo', 'Fecha', 'Costo', 'Notas'];
+                            filename = 'mantenimiento-registros';
+                            break;
+                        default:
+                            console.error("Colección de exportación no reconocida:", collectionName);
+                            return;
+                    }
+
+                    if (format === 'csv') {
+                        exportToCsv(dataToExport, filename);
+                    } else if (format === 'pdf') {
+                        exportToPdf(dataToExport, columns, filename, `Reporte de ${collectionName.charAt(0).toUpperCase() + collectionName.slice(1)}`);
+                    }
+                }
+            });
+
+            // Inicializa Firebase cuando el DOM esté cargado
+            initializeFirebase();
+        });
+
+        // --- Funciones de Exportación ---
+
+        function exportToCsv(dataArray, filename) {
+            if (!dataArray || dataArray.length === 0) {
+                showMessage("No hay datos para exportar a CSV.");
+                return;
+            }
+
+            const headers = Object.keys(dataArray[0]);
+            const csvRows = [];
+
+            // Añadir encabezados
+            csvRows.push(headers.join(','));
+
+            // Añadir filas de datos
+            for (const row of dataArray) {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    // Envuelve los valores con comillas si contienen comas o saltos de línea
+                    return ('' + value).includes(',') || ('' + value).includes('\n') ? `"${value}"` : value;
+                });
+                csvRows.push(values.join(','));
+            }
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.csv`;
+            link.click();
+            showMessage(`Archivo ${filename}.csv descargado.`);
+        }
+
+        function exportToPdf(dataArray, columns, filename, title) {
+            if (!dataArray || dataArray.length === 0) {
+                showMessage("No hay datos para exportar a PDF.");
+                return;
+            }
+
+            // Accedemos a jsPDF desde el objeto global window
+            const doc = new window.jsPDF.jsPDF(); // O new window.jsPDF() si es el caso
+
+            // Configuración de la tabla
+            const tableColumnNames = columns.map(col => ({ header: col, dataKey: col }));
+            const tableRows = dataArray.map(row => columns.map(col => row[col]));
+
+            doc.text(title, 14, 20); // Título del documento
+
+            doc.autoTable({
+                head: [tableColumnNames.map(col => col.header)],
+                body: tableRows,
+                startY: 30, // Posición inicial de la tabla
+                theme: 'striped', // Estilo de la tabla
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 8,
+                    cellPadding: 2,
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [45, 85, 140], // Azul oscuro para el encabezado
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240] // Gris claro para filas alternas
+                },
+                margin: { top: 25 }
+            });
+
+            doc.save(`${filename}.pdf`);
+            showMessage(`Archivo ${filename}.pdf descargado.`);
+        }
+
+
+        // --- Funciones CRUD y de Carga de Datos para cada sección ---
+
+        // Helper para obtener la colección correcta (privada por defecto)
+        function getCollectionRef(collectionName) {
+            if (!userId) {
+                console.error("userId no está definido. No se puede acceder a la colección.");
+                return null;
+            }
+            // Usamos la ruta privada para los datos del usuario
+            return collection(db, `artifacts/${appId}/users/${userId}/${collectionName}`);
+        }
+
+        // Carga todos los datos al iniciar la aplicación
+        async function loadAllData() {
+            if (!isAuthReady) {
+                console.warn("Firebase no está listo para cargar datos. Esperando autenticación...");
+                return;
+            }
+
+            // Cargar datos de referencia primero
+            await loadEmployeesData(); // Carga empleados y actualiza allEmployees
+            await loadTrucksData();    // Carga camiones y actualiza allTrucks
+            await loadTravelsData();   // Carga viajes y actualiza allTrips
+            await loadInvoicesData();  // Carga facturas y actualiza allInvoices
+            await loadMaintenanceData(); // Carga mantenimiento y actualiza allMaintenance
+
+            // Finalmente, cargar el dashboard que depende de todos los datos
+            loadDashboardData(); // Carga el dashboard con el mes actual por defecto
+        }
+
+        // --- Dashboard ---
+        function loadDashboardData() {
+            if (!isAuthReady) return;
+
+            const selectedMonthYear = dashboardMonthSelector.value; // Ej: "2024-07"
+            // const [selectedYear, selectedMonth] = selectedMonthYear.split('-'); // No se usa directamente aquí, se usa el string completo
+
+            let totalRevenueAccumulated = 0;
+            let completedTripsAccumulated = 0;
+            let pendingInvoicesAccumulatedAmount = 0;
+            let activeEmployeesCountAccumulated = 0;
+            let registeredTrucksCountAccumulated = 0;
+            let maintenanceVehiclesCountAccumulated = 0;
+
+            let monthlyRevenue = 0;
+            let monthlyCompletedTrips = 0;
+            let monthlyPaidInvoices = 0;
+            let monthlyPendingInvoices = 0;
+            let monthlyNewEmployees = 0;
+            let monthlyNewTrucks = 0;
+            let monthlyMaintenance = 0;
+
+            const historicalMonthlyRevenue = {}; // Para almacenar ingresos históricos por mes
+            const latestActivities = [];
+
+            // Escuchar viajes para ingresos totales y completados, y para ingresos mensuales
+            onSnapshot(getCollectionRef('viajes'), (snapshot) => {
+                totalRevenueAccumulated = 0;
+                completedTripsAccumulated = 0;
+                monthlyRevenue = 0;
+                monthlyCompletedTrips = 0;
+                // Reinicia historicalMonthlyRevenue para recalcular
+                for (const key in historicalMonthlyRevenue) { delete historicalMonthlyRevenue[key]; }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tripDate = new Date(data.date);
+                    const docYear = tripDate.getFullYear().toString();
+                    const docMonth = (tripDate.getMonth() + 1).toString().padStart(2, '0');
+                    const docYearMonth = `${docYear}-${docMonth}`;
+
+                    // Acumulados
+                    if (data.status === 'Completado') {
+                        totalRevenueAccumulated += data.amount || 0;
+                        completedTripsAccumulated++;
+                    }
+                    latestActivities.push({ type: 'Viaje', description: `Viaje a ${data.route} (${data.status})`, date: data.date });
+
+                    // Mensuales
+                    if (docYearMonth === selectedMonthYear) {
+                        if (data.status === 'Completado') {
+                            monthlyRevenue += data.amount || 0;
+                            monthlyCompletedTrips++;
+                        }
+                    }
+
+                    // Históricos mensuales
+                    if (data.status === 'Completado') {
+                        if (!historicalMonthlyRevenue[docYearMonth]) {
+                            historicalMonthlyRevenue[docYearMonth] = 0;
+                        }
+                        historicalMonthlyRevenue[docYearMonth] += data.amount || 0;
+                    }
+                });
+                document.getElementById('dashboard-total-revenue-accumulated').textContent = totalRevenueAccumulated.toFixed(2);
+                document.getElementById('dashboard-completed-trips-accumulated').textContent = completedTripsAccumulated;
+                dashboardMonthlyRevenue.textContent = monthlyRevenue.toFixed(2);
+                dashboardMonthlyCompletedTrips.textContent = monthlyCompletedTrips;
+                updateHistoricalMonthlyRevenueDisplay(historicalMonthlyRevenue);
+                updateLatestActivities(latestActivities);
+            }, (error) => console.error("Error al escuchar viajes para dashboard:", error));
+
+            // Escuchar facturas
+            onSnapshot(getCollectionRef('facturas'), (snapshot) => {
+                pendingInvoicesAccumulatedAmount = 0;
+                monthlyPaidInvoices = 0;
+                monthlyPendingInvoices = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const invoiceDate = new Date(data.date);
+                    const docYear = invoiceDate.getFullYear().toString();
+                    const docMonth = (invoiceDate.getMonth() + 1).toString().padStart(2, '0');
+                    const docYearMonth = `${docYear}-${docMonth}`;
+
+                    // Acumulados
+                    if (data.status === 'Pendiente' || data.status === 'Vencida') {
+                        pendingInvoicesAccumulatedAmount += data.amount || 0;
+                    }
+                    latestActivities.push({ type: 'Factura', description: `Factura ${data.invoiceNumber} (${data.status})`, date: data.date });
+
+                    // Mensuales
+                    if (docYearMonth === selectedMonthYear) {
+                        if (data.status === 'Pagada') {
+                            monthlyPaidInvoices += data.amount || 0;
+                        } else if (data.status === 'Pendiente' || data.status === 'Vencida') {
+                            monthlyPendingInvoices += data.amount || 0;
+                        }
+                    }
+                });
+                document.getElementById('dashboard-pending-invoices-accumulated').textContent = pendingInvoicesAccumulatedAmount.toFixed(2);
+                dashboardMonthlyPaidInvoices.textContent = monthlyPaidInvoices.toFixed(2);
+                dashboardMonthlyPendingInvoices.textContent = monthlyPendingInvoices.toFixed(2);
+                updateLatestActivities(latestActivities);
+            }, (error) => console.error("Error al escuchar facturas para dashboard:", error));
+
+            // Escuchar empleados
+            onSnapshot(getCollectionRef('empleados'), (snapshot) => {
+                activeEmployeesCountAccumulated = snapshot.size; // Cuenta todos los documentos como empleados activos
+                monthlyNewEmployees = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const hireDate = new Date(data.hireDate);
+                    const docYear = hireDate.getFullYear().toString();
+                    const docMonth = (hireDate.getMonth() + 1).toString().padStart(2, '0');
+                    const docYearMonth = `${docYear}-${docMonth}`;
+
+                    if (docYearMonth === selectedMonthYear) {
+                        monthlyNewEmployees++;
+                    }
+                    latestActivities.push({ type: 'Empleado', description: `Empleado ${data.name} (${data.role})`, date: data.hireDate });
+                });
+                document.getElementById('dashboard-active-employees-accumulated').textContent = activeEmployeesCountAccumulated;
+                dashboardMonthlyNewEmployees.textContent = monthlyNewEmployees;
+                updateLatestActivities(latestActivities);
+            }, (error) => console.error("Error al escuchar empleados para dashboard:", error));
+
+            // Escuchar camiones
+            onSnapshot(getCollectionRef('camiones'), (snapshot) => {
+                registeredTrucksCountAccumulated = snapshot.size;
+                monthlyNewTrucks = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const createdAt = data.createdAt ? new Date(data.createdAt.toDate()) : new Date(); // Usa createdAt o fecha actual
+                    const docYear = createdAt.getFullYear().toString();
+                    const docMonth = (createdAt.getMonth() + 1).toString().padStart(2, '0');
+                    const docYearMonth = `${docYear}-${docMonth}`;
+
+                    if (docYearMonth === selectedMonthYear) {
+                        monthlyNewTrucks++;
+                    }
+                    latestActivities.push({ type: 'Camión', description: `Camión ${data.plate} (${data.brand})`, date: data.createdAt ? new Date(data.createdAt.toDate()).toISOString().split('T')[0] : 'N/A' });
+                });
+                document.getElementById('dashboard-registered-trucks-accumulated').textContent = registeredTrucksCountAccumulated;
+                dashboardMonthlyNewTrucks.textContent = monthlyNewTrucks;
+                updateLatestActivities(latestActivities);
+            }, (error) => console.error("Error al escuchar camiones para dashboard:", error));
+
+            // Escuchar mantenimiento
+            onSnapshot(getCollectionRef('mantenimiento'), (snapshot) => {
+                maintenanceVehiclesCountAccumulated = 0;
+                monthlyMaintenance = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const maintenanceDate = new Date(data.date);
+                    const docYear = maintenanceDate.getFullYear().toString();
+                    const docMonth = (maintenanceDate.getMonth() + 1).toString().padStart(2, '0');
+                    const docYearMonth = `${docYear}-${docMonth}`;
+
+                    maintenanceVehiclesCountAccumulated++; // Acumulado
+                    if (docYearMonth === selectedMonthYear) {
+                        monthlyMaintenance++;
+                    }
+                    latestActivities.push({ type: 'Mantenimiento', description: `Mantenimiento de ${data.vehicle} (${data.type})`, date: data.date });
+                });
+                document.getElementById('dashboard-maintenance-vehicles-accumulated').textContent = maintenanceVehiclesCountAccumulated;
+                dashboardMonthlyMaintenance.textContent = monthlyMaintenance;
+                updateLatestActivities(latestActivities);
+            }, (error) => console.error("Error al escuchar mantenimiento:", error));
+        }
+
+        function updateHistoricalMonthlyRevenueDisplay(monthlyData) {
+            monthlyRevenueList.innerHTML = ''; // Limpia la lista
+
+            const sortedMonths = Object.keys(monthlyData).sort().reverse(); // Ordena los meses de más reciente a más antiguo
+
+            // Muestra solo los últimos 6 meses
+            const monthsToShow = sortedMonths.slice(0, 6);
+
+            if (monthsToShow.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No hay datos de ingresos mensuales disponibles.';
+                monthlyRevenueList.appendChild(li);
+                return;
+            }
+
+            monthsToShow.forEach(yearMonth => {
+                const [year, month] = yearMonth.split('-');
+                const date = new Date(year, parseInt(month) - 1, 1); // Crea una fecha para obtener el nombre del mes
+                const monthName = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                const revenue = monthlyData[yearMonth];
+
+                const li = document.createElement('li');
+                li.textContent = `${monthName}: $${revenue.toFixed(2)}`;
+                monthlyRevenueList.appendChild(li);
+            });
+        }
+
+
+        function updateLatestActivities(activities) {
+            const tableBody = document.getElementById('latest-activities-table-body');
+            tableBody.innerHTML = ''; // Limpia la tabla
+
+            // Ordena las actividades por fecha (más reciente primero)
+            const sortedActivities = activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Muestra solo las últimas 5 actividades
+            sortedActivities.slice(0, 5).forEach(activity => {
+                const row = document.createElement('tr');
+                row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-left whitespace-nowrap">${activity.type}</td>
+                    <td class="py-3 px-6 text-left">${activity.description}</td>
+                    <td class="py-3 px-6 text-left">${activity.date}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+
+        // --- Viajes ---
+        const travelForm = document.getElementById('travel-form');
+        const travelsTableBody = document.getElementById('travels-table-body');
+        const travelEmployeeSelect = document.getElementById('travel-employee');
+        const travelTruckSelect = document.getElementById('travel-truck');
+
+        travelForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+
+            const travelData = {
+                date: document.getElementById('travel-date').value,
+                client: document.getElementById('travel-client').value,
+                route: document.getElementById('travel-route').value,
+                amount: parseFloat(document.getElementById('travel-amount').value),
+                employeeId: travelEmployeeSelect.value, // ID del empleado seleccionado
+                truckId: travelTruckSelect.value,       // ID del camión seleccionado
+                status: document.getElementById('travel-status').value,
+                createdAt: new Date() // Para ordenar por fecha de creación
+            };
+
+            try {
+                await addDoc(getCollectionRef('viajes'), travelData);
+                showMessage("Viaje registrado exitosamente!");
+                travelForm.reset();
+            } catch (e) {
+                console.error("Error al añadir viaje: ", e);
+                showMessage("Error al registrar el viaje: " + e.message);
+            }
+        });
+
+        async function loadTravelsData() {
+            if (!isAuthReady) return;
+            const q = query(getCollectionRef('viajes'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                travelsTableBody.innerHTML = ''; // Limpia la tabla
+                allTrips = []; // Limpia el array de viajes para reconstruirlo
+                snapshot.forEach(doc => {
+                    const travel = { id: doc.id, ...doc.data() };
+                    allTrips.push(travel); // Almacena el viaje para referencia en facturas
+
+                    // Busca el nombre del empleado y la placa del camión usando los IDs
+                    const employee = allEmployees.find(emp => emp.id === travel.employeeId);
+                    const truck = allTrucks.find(trk => trk.id === travel.truckId);
+
+                    const employeeName = employee ? employee.name : 'Desconocido';
+                    const truckPlate = truck ? truck.plate : 'Desconocido';
+
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${travel.date}</td>
+                        <td class="py-3 px-6 text-left">${travel.client}</td>
+                        <td class="py-3 px-6 text-left">${travel.route}</td>
+                        <td class="py-3 px-6 text-left">$${travel.amount.toFixed(2)}</td>
+                        <td class="py-3 px-6 text-left">${employeeName}</td>
+                        <td class="py-3 px-6 text-left">${truckPlate}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="${travel.status === 'Completado' ? 'bg-green-200 text-green-800' : travel.status === 'Pendiente' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'} py-1 px-3 rounded-full text-xs">
+                                ${travel.status}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="edit-button" data-id="${doc.id}" data-collection="viajes">Editar</button>
+                            <button class="delete-button" data-id="${doc.id}" data-collection="viajes">Eliminar</button>
+                        </td>
+                    `;
+                    travelsTableBody.appendChild(row);
+                });
+                // Una vez que los viajes se cargan, actualiza el selector de viajes en facturas
+                populateInvoiceTripSelect();
+            }, (error) => console.error("Error al escuchar viajes:", error));
+        }
+
+        // --- Facturas ---
+        const invoiceForm = document.getElementById('invoice-form');
+        const invoicesTableBody = document.getElementById('invoices-table-body');
+        const invoiceTripSelect = document.getElementById('invoice-trip-id');
+        // allInvoices ya está declarada globalmente
+
+        invoiceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+
+            const invoiceData = {
+                invoiceNumber: document.getElementById('invoice-number').value,
+                date: document.getElementById('invoice-date').value,
+                client: document.getElementById('invoice-client').value,
+                amount: parseFloat(document.getElementById('invoice-amount').value),
+                dueDate: document.getElementById('invoice-due-date').value,
+                status: document.getElementById('invoice-status').value,
+                tripId: invoiceTripSelect.value || null, // Guarda el ID del viaje relacionado
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(getCollectionRef('facturas'), invoiceData);
+                showMessage("Factura registrada exitosamente!");
+                invoiceForm.reset();
+            } catch (e) {
+                console.error("Error al añadir factura: ", e);
+                showMessage("Error al registrar la factura: " + e.message);
+            }
+        });
+
+        function loadInvoicesData() {
+            if (!isAuthReady) return;
+            const q = query(getCollectionRef('facturas'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                invoicesTableBody.innerHTML = '';
+                allInvoices = []; // Limpia el array de facturas
+                snapshot.forEach(doc => {
+                    const invoice = { id: doc.id, ...doc.data() };
+                    allInvoices.push(invoice); // Almacena la factura
+                    // Busca la ruta del viaje relacionado usando el ID
+                    const relatedTrip = allTrips.find(trip => trip.id === invoice.tripId);
+                    const tripDetails = relatedTrip ? `${relatedTrip.route} ($${relatedTrip.amount.toFixed(2)})` : 'N/A';
+
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${invoice.invoiceNumber}</td>
+                        <td class="py-3 px-6 text-left">${invoice.date}</td>
+                        <td class="py-3 px-6 text-left">${invoice.client}</td>
+                        <td class="py-3 px-6 text-left">$${invoice.amount.toFixed(2)}</td>
+                        <td class="py-3 px-6 text-left">${invoice.dueDate}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="${invoice.status === 'Pagada' ? 'bg-green-200 text-green-800' : invoice.status === 'Pendiente' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'} py-1 px-3 rounded-full text-xs">
+                                ${invoice.status}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">${tripDetails}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="edit-button" data-id="${doc.id}" data-collection="facturas">Editar</button>
+                            <button class="delete-button" data-id="${doc.id}" data-collection="facturas">Eliminar</button>
+                        </td>
+                    `;
+                    invoicesTableBody.appendChild(row);
+                });
+            }, (error) => console.error("Error al escuchar facturas:", error));
+        }
+
+        // Función para poblar el selector de viajes en el formulario de facturas
+        function populateInvoiceTripSelect() {
+            invoiceTripSelect.innerHTML = '<option value="">Ningún viaje</option>'; // Limpia y añade opción por defecto
+            // Filtra solo viajes completados para asociar con facturas
+            allTrips.filter(trip => trip.status === 'Completado').forEach(trip => {
+                const option = document.createElement('option');
+                option.value = trip.id;
+                option.textContent = `${trip.date} - ${trip.route} (${trip.client}) - $${trip.amount.toFixed(2)}`;
+                invoiceTripSelect.appendChild(option);
+            });
+        }
+
+        // --- Empleados ---
+        const employeeForm = document.getElementById('employee-form');
+        const employeesTableBody = document.getElementById('employees-table-body');
+
+        employeeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+
+            const employeeData = {
+                name: document.getElementById('employee-name').value,
+                role: document.getElementById('employee-role').value,
+                phone: document.getElementById('employee-phone').value,
+                salary: parseFloat(document.getElementById('employee-salary').value || 0),
+                hireDate: document.getElementById('employee-hire-date').value,
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(getCollectionRef('empleados'), employeeData);
+                showMessage("Empleado registrado exitosamente!");
+                employeeForm.reset();
+            } catch (e) {
+                console.error("Error al añadir empleado: ", e);
+                showMessage("Error al registrar el empleado: " + e.message);
+            }
+        });
+
+        async function loadEmployeesData() {
+            if (!isAuthReady) return;
+            const q = query(getCollectionRef('empleados'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                employeesTableBody.innerHTML = '';
+                allEmployees = []; // Limpia el array de empleados para reconstruirlo
+                travelEmployeeSelect.innerHTML = '<option value="">Selecciona un empleado</option>'; // Limpia el selector
+                snapshot.forEach(doc => {
+                    const employee = { id: doc.id, ...doc.data() };
+                    allEmployees.push(employee); // Almacena el empleado
+
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${employee.name}</td>
+                        <td class="py-3 px-6 text-left">${employee.role}</td>
+                        <td class="py-3 px-6 text-left">${employee.phone}</td>
+                        <td class="py-3 px-6 text-left">$${employee.salary.toFixed(2)}</td>
+                        <td class="py-3 px-6 text-left">${employee.hireDate}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="edit-button" data-id="${doc.id}" data-collection="empleados">Editar</button>
+                            <button class="delete-button" data-id="${doc.id}" data-collection="empleados">Eliminar</button>
+                        </td>
+                    `;
+                    employeesTableBody.appendChild(row);
+
+                    // Añade el empleado al selector de viajes
+                    const option = document.createElement('option');
+                    option.value = employee.id;
+                    option.textContent = `${employee.name} (${employee.role})`;
+                    travelEmployeeSelect.appendChild(option);
+                });
+            }, (error) => console.error("Error al escuchar empleados:", error));
+        }
+
+        // --- Camiones ---
+        const truckForm = document.getElementById('truck-form');
+        const trucksTableBody = document.getElementById('trucks-table-body');
+        // allTrucks ya está declarada globalmente
+
+        truckForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+
+            const truckData = {
+                plate: document.getElementById('truck-plate').value,
+                brand: document.getElementById('truck-brand').value,
+                model: document.getElementById('truck-model').value,
+                year: parseInt(document.getElementById('truck-year').value),
+                capacity: parseFloat(document.getElementById('truck-capacity').value || 0),
+                status: document.getElementById('truck-status').value,
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(getCollectionRef('camiones'), truckData);
+                showMessage("Camión registrado exitosamente!");
+                truckForm.reset();
+            } catch (e) {
+                console.error("Error al añadir camión: ", e);
+                showMessage("Error al registrar el camión: " + e.message);
+            }
+        });
+
+        async function loadTrucksData() {
+            if (!isAuthReady) return;
+            const q = query(getCollectionRef('camiones'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                trucksTableBody.innerHTML = '';
+                allTrucks = []; // Limpia el array de camiones para reconstruirlo
+                travelTruckSelect.innerHTML = '<option value="">Selecciona un camión</option>'; // Limpia el selector
+                snapshot.forEach(doc => {
+                    const truck = { id: doc.id, ...doc.data() };
+                    allTrucks.push(truck); // Almacena el camión
+
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${truck.plate}</td>
+                        <td class="py-3 px-6 text-left">${truck.brand}</td>
+                        <td class="py-3 px-6 text-left">${truck.model || '-'}</td>
+                        <td class="py-3 px-6 text-left">${truck.year || '-'}</td>
+                        <td class="py-3 px-6 text-left">${truck.capacity ? truck.capacity.toFixed(1) + ' ton' : '-'}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="${truck.status === 'Activo' ? 'bg-green-200 text-green-800' : truck.status === 'En Mantenimiento' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'} py-1 px-3 rounded-full text-xs">
+                                ${truck.status}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="edit-button" data-id="${doc.id}" data-collection="camiones">Editar</button>
+                            <button class="delete-button" data-id="${doc.id}" data-collection="camiones">Eliminar</button>
+                        </td>
+                    `;
+                    trucksTableBody.appendChild(row);
+
+                    // Añade el camión al selector de viajes
+                    const option = document.createElement('option');
+                    option.value = truck.id;
+                    option.textContent = `${truck.plate} (${truck.brand} ${truck.model || ''})`;
+                    travelTruckSelect.appendChild(option);
+                });
+            }, (error) => console.error("Error al escuchar camiones:", error));
+        }
+
+        // --- Mantenimiento ---
+        const maintenanceForm = document.getElementById('maintenance-form');
+        const maintenanceTableBody = document.getElementById('maintenance-table-body');
+        // allMaintenance ya está declarada globalmente
+
+        maintenanceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+
+            const maintenanceData = {
+                vehicle: document.getElementById('maintenance-vehicle').value,
+                type: document.getElementById('maintenance-type').value,
+                date: document.getElementById('maintenance-date').value,
+                cost: parseFloat(document.getElementById('maintenance-cost').value || 0),
+                notes: document.getElementById('maintenance-notes').value,
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(getCollectionRef('mantenimiento'), maintenanceData);
+                showMessage("Mantenimiento registrado exitosamente!");
+                maintenanceForm.reset();
+            } catch (e) {
+                console.error("Error al añadir mantenimiento: ", e);
+                showMessage("Error al registrar el mantenimiento: " + e.message);
+            }
+        });
+
+        function loadMaintenanceData() {
+            if (!isAuthReady) return;
+            const q = query(getCollectionRef('mantenimiento'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                maintenanceTableBody.innerHTML = '';
+                allMaintenance = []; // Limpia el array de mantenimientos
+                snapshot.forEach(doc => {
+                    const maintenance = { id: doc.id, ...doc.data() };
+                    allMaintenance.push(maintenance); // Almacena el mantenimiento
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${maintenance.vehicle}</td>
+                        <td class="py-3 px-6 text-left">${maintenance.type}</td>
+                        <td class="py-3 px-6 text-left">${maintenance.date}</td>
+                        <td class="py-3 px-6 text-left">$${maintenance.cost.toFixed(2)}</td>
+                        <td class="py-3 px-6 text-left">${maintenance.notes || '-'}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="edit-button" data-id="${doc.id}" data-collection="mantenimiento">Editar</button>
+                            <button class="delete-button" data-id="${doc.id}" data-collection="mantenimiento">Eliminar</button>
+                        </td>
+                    `;
+                    maintenanceTableBody.appendChild(row);
+                });
+            }, (error) => console.error("Error al escuchar mantenimiento:", error));
+        }
+
+        // --- Funciones de Edición y Eliminación Genéricas ---
+        document.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-button')) {
+                currentEditingDocId = e.target.dataset.id;
+                currentEditingCollection = e.target.dataset.collection;
+                document.getElementById('confirm-message').textContent = `¿Estás seguro de que quieres eliminar este registro de ${currentEditingCollection}?`;
+                confirmModal.style.display = 'flex';
+            } else if (e.target.classList.contains('edit-button')) {
+                currentEditingDocId = e.target.dataset.id;
+                currentEditingCollection = e.target.dataset.collection;
+                await openEditModal(currentEditingCollection, currentEditingDocId);
+            }
+        });
+
+        // Event listener para el botón de confirmación de eliminación
+        confirmDeleteButton.addEventListener('click', async () => {
+            if (!currentEditingDocId || !currentEditingCollection) {
+                showMessage("Error: No hay registro seleccionado para eliminar.");
+                return;
+            }
+            try {
+                await deleteDoc(doc(getCollectionRef(currentEditingCollection), currentEditingDocId));
+                showMessage("Registro eliminado exitosamente!");
+                confirmModal.style.display = 'none';
+                currentEditingDocId = null;
+                currentEditingCollection = null;
+            } catch (error) {
+                console.error("Error al eliminar documento:", error);
+                showMessage("Error al eliminar el registro: " + error.message);
+            }
+        });
+
+        // Función para abrir el modal de edición y cargar datos
+        async function openEditModal(collectionName, docId) {
+            editModalTitle.textContent = collectionName.charAt(0).toUpperCase() + collectionName.slice(1); // Capitaliza el nombre de la colección
+            editForm.innerHTML = ''; // Limpia el formulario
+
+            try {
+                const docRef = doc(getCollectionRef(collectionName), docId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Generar campos de formulario dinámicamente
+                    for (const key in data) {
+                        // Ignorar campos de metadatos como 'createdAt'
+                        if (key === 'createdAt' || key === 'id') continue;
+
+                        const div = document.createElement('div');
+                        div.classList.add('col-span-1');
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `edit-${key}`;
+                        label.classList.add('block', 'text-gray-700', 'text-sm', 'font-bold', 'mb-2');
+                        label.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) + ':'; // Formato legible
+
+                        let inputElement;
+
+                        // Manejo especial para selectores relacionados (empleados, camiones, viajes)
+                        if (key === 'employeeId') {
+                            inputElement = document.createElement('select');
+                            inputElement.id = `edit-${key}`;
+                            inputElement.classList.add('form-input');
+                            allEmployees.forEach(emp => {
+                                const option = document.createElement('option');
+                                option.value = emp.id;
+                                option.textContent = `${emp.name} (${emp.role})`;
+                                if (emp.id === data[key]) option.selected = true;
+                                inputElement.appendChild(option);
+                            });
+                        } else if (key === 'truckId') {
+                            inputElement = document.createElement('select');
+                            inputElement.id = `edit-${key}`;
+                            inputElement.classList.add('form-input');
+                            allTrucks.forEach(truck => {
+                                const option = document.createElement('option');
+                                option.value = truck.id;
+                                option.textContent = `${truck.plate} (${truck.brand} ${truck.model || ''})`;
+                                if (truck.id === data[key]) option.selected = true;
+                                inputElement.appendChild(option);
+                            });
+                        } else if (key === 'tripId') {
+                            inputElement = document.createElement('select');
+                            inputElement.id = `edit-${key}`;
+                            inputElement.classList.add('form-input');
+                            // Opción para no relacionar ningún viaje
+                            let defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.textContent = 'Ningún viaje';
+                            inputElement.appendChild(defaultOption);
+                            allTrips.filter(trip => trip.status === 'Completado').forEach(trip => {
+                                const option = document.createElement('option');
+                                option.value = trip.id;
+                                option.textContent = `${trip.date} - ${trip.route} ($${trip.amount.toFixed(2)})`;
+                                if (trip.id === data[key]) option.selected = true;
+                                inputElement.appendChild(option);
+                            });
+                        } else if (key === 'status' && (collectionName === 'viajes' || collectionName === 'facturas' || collectionName === 'camiones')) {
+                            inputElement = document.createElement('select');
+                            inputElement.id = `edit-${key}`;
+                            inputElement.classList.add('form-input');
+                            let options = [];
+                            if (collectionName === 'viajes') options = ['Pendiente', 'Completado', 'Cancelado'];
+                            if (collectionName === 'facturas') options = ['Pendiente', 'Pagada', 'Vencida'];
+                            if (collectionName === 'camiones') options = ['Activo', 'En Mantenimiento', 'Inactivo'];
+
+                            options.forEach(optionText => {
+                                const option = document.createElement('option');
+                                option.value = optionText;
+                                option.textContent = optionText;
+                                if (optionText === data[key]) option.selected = true;
+                                inputElement.appendChild(option);
+                            });
+                        }
+                        else if (typeof data[key] === 'number') {
+                            inputElement = document.createElement('input');
+                            inputElement.type = 'number';
+                            inputElement.step = '0.01';
+                            inputElement.value = data[key];
+                        } else if (key.includes('date') || key.includes('Date')) {
+                            inputElement = document.createElement('input');
+                            inputElement.type = 'date';
+                            inputElement.value = data[key];
+                        } else if (key === 'notes') {
+                            inputElement = document.createElement('textarea');
+                            inputElement.rows = '2';
+                            inputElement.value = data[key];
+                        } else {
+                            inputElement = document.createElement('input');
+                            inputElement.type = 'text';
+                            inputElement.value = data[key];
+                        }
+                        inputElement.id = `edit-${key}`;
+                        inputElement.classList.add('form-input');
+
+                        div.appendChild(label);
+                        div.appendChild(inputElement);
+                        editForm.insertBefore(div, editForm.lastElementChild); // Inserta antes del botón de guardar
+                    }
+
+                    editModal.style.display = 'flex';
+                } else {
+                    showMessage("Error: No se encontró el documento para editar.");
+                }
+            }
+            catch (error) {
+                console.error("Error al cargar datos para edición:", error);
+                showMessage("Error al cargar los datos para editar: " + error.message);
+            }
+        }
+
+        // Event listener para el formulario de edición
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("La base de datos no está lista. Por favor, espera.");
+                return;
+            }
+            if (!currentEditingDocId || !currentEditingCollection) {
+                showMessage("Error: No hay registro seleccionado para actualizar.");
+                return;
+            }
+
+            const updatedData = {};
+            // Recorre los campos del formulario de edición para construir el objeto de datos
+            for (const element of editForm.elements) {
+                if (element.id && element.id.startsWith('edit-') && element.id !== 'edit-submit-button') {
+                    const key = element.id.replace('edit-', '');
+                    let value = element.value;
+
+                    // Conversión de tipos si es necesario
+                    if (element.type === 'number') {
+                        value = parseFloat(value);
+                    } else if (element.tagName === 'SELECT' && value === '') {
+                        value = null; // Para campos opcionales relacionados
+                    }
+                    updatedData[key] = value;
+                }
+            }
+
+            try {
+                await updateDoc(doc(getCollectionRef(currentEditingCollection), currentEditingDocId), updatedData);
+                showMessage("Registro actualizado exitosamente!");
+                editModal.style.display = 'none';
+                currentEditingDocId = null;
+                currentEditingCollection = null;
+            } catch (error) {
+                console.error("Error al actualizar documento:", error);
+                showMessage("Error al actualizar el registro: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
